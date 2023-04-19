@@ -36,8 +36,6 @@ fn main() {
     let c = webController::new();
     app.register(c);
     app.start();
-
-    
 }
 
 
