@@ -74,13 +74,26 @@ impl HttpParser {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HttpRequest {
     
-    header: HttpHeader,
-    body: HttpBody,
+    pub header: HttpHeader,
+    pub body: HttpBody,
 }
 
 impl HttpRequest {
     pub fn new(header: HttpHeader, body: HttpBody) ->HttpRequest {
         return HttpRequest{header, body};
+    }
+    
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HttpResponse {
+    
+    pub ss: String
+}
+
+impl HttpResponse {
+    pub fn new(ss: String) ->HttpResponse {
+        return HttpResponse{ss};
     }
     
 }
@@ -123,8 +136,8 @@ impl HttpRequest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HttpHeader {
      cookie: Cookie,
-     url: Path,
-     method: Method,
+    pub url: Path,
+    pub method: Method,
      protocol: Protocal,
      version: Version,
      others: HashMap<String,String>
@@ -140,7 +153,7 @@ impl HttpHeader {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HttpBody {
-    content: String,
+    pub content: String,
 }
 
 impl HttpBody {

@@ -1,14 +1,14 @@
 use std::borrow::BorrowMut;
+use std::fmt::Display;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{Method, handlers,handler};
+use crate::{Method, handlers,handler, parser::{HttpRequest, HttpResponse}, Handler};
 
-
-
+#[derive(Debug)]
 pub struct Node {
-    path:String,
-    handlers: handlers,
+    pub path:String,
+    pub handlers: handlers,
     //children: Vec<Box<node>>
 }
 
@@ -18,11 +18,27 @@ impl Node {
     }
 }
 
+impl Clone for Node {
+    fn clone(&self) -> Self {
+        //let path = self.path.clone();
+        Self { path: self.path.clone(), handlers: self.handlers.clone() }
+    }
+}
 
+
+#[derive(Debug)]
 pub struct MethodTree {
     method: Method,
     nodes: Vec<Node>,
 }
+
+impl Clone for MethodTree {
+    fn clone(&self) -> Self {
+        Self { method: self.method.clone(), nodes: self.nodes.clone() }
+    }
+}
+
+
 
 impl MethodTree {
     pub fn new(method: Method) -> MethodTree {
@@ -61,13 +77,30 @@ impl MethodTree {
         //self.nodes.append())
     }
 
+    pub fn get<'a>(&'a self,path:String) ->Option<&'a Node> {
+        for node in &self.nodes {
+            if node.path == path {
+                return Some(node);
+            }
+        }
+        return None
+    }
+
     
 }
 
 
+#[derive(Debug)]
 pub struct MethodTrees{
     data: Vec<MethodTree>
 }
+
+impl Clone for MethodTrees {
+    fn clone(&self) -> Self {
+        Self { data: self.data.clone() }
+    }
+}
+
 
 impl MethodTrees {
     
@@ -99,6 +132,16 @@ impl MethodTrees {
 
     }
 
+    pub fn get<'a>(&'a self,method:Method) ->Option<&'a MethodTree> {
+        for tree in &self.data {
+            if tree.method == method {
+                //let cc = tree.clone();
+                return Some(tree);
+            }
+        }
+        return None
+    }
+
 }
 
 
@@ -107,5 +150,16 @@ pub  struct RouteInfo {
 	pub method:      Method,
 	pub path:        String,
 	pub handlerFunc: handler,
+}
+
+impl RouteInfo {
+    pub fn new<T>(method: Method, path: &str, handlerFunc: T)->RouteInfo
+    where T:  Handler<HttpRequest, Output = HttpResponse>
+    {
+        let handlerFunc = Box::new(handlerFunc);
+        let path = path.to_owned();
+        return RouteInfo{method,path, handlerFunc};
+    }
+    
 }
 

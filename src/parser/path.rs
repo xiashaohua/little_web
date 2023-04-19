@@ -6,7 +6,7 @@ use super::split_once_line;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Path {
-    url:String,
+    pub url:String,
     params:HashMap<String,String>,
     params_string:String,
 }

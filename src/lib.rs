@@ -1,8 +1,12 @@
+use std::{process::Output, future::Future, fmt::{Display, Debug}};
+
+use parser::{HttpRequest, HttpResponse};
 use serde::{Serialize, Deserialize};
 
 pub mod core;
 pub mod parser;
 pub mod route;
+pub mod error;
 
 
 #[derive(Serialize, Deserialize, Debug,PartialEq)]
@@ -99,7 +103,84 @@ impl From<String> for Version {
     }
 }
 
-pub type handler= Box<dyn FnOnce() + Send + 'static>;
+
+// pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
+//     /// The returned type after the call operator is used.
+//     type Output;
+
+//     /// Performs the call operation.
+//     #[must_use]
+//     fn call(&self, input: Input) -> Self::Output;
+// }
+
+// impl<I, T> HandlerExt<I> for T where T: Handler<I> + ?Sized {}
+
+
+// impl<F, I, Fut, O> Handler<I> for F
+// where
+//     I: Send + 'static,
+//     F: Fn(I) -> Fut + ?Sized + Clone + Send + Sync + 'static,
+//     Fut: Future<Output = O> + Send,
+// {
+//     type Output = Fut::Output;
+
+//     fn call(&self, i: I) -> Self::Output {
+//         (self)(i)
+//     }
+// }
+
+// auto trait Handler {
+
+// }
+
+// trait NewTrait: FnOnce(HttpRequest) -> HttpResponse + Clone {}
+
+pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
+    /// The returned type after the call operator is used.
+    type Output;
+
+    /// Performs the call operation.
+    #[must_use]
+    fn call(&self, input: Input) -> Self::Output;
+}
+
+impl<F, I, O> Handler<I> for F
+where
+    I: Send + 'static,
+    F: Fn(I) -> O + ?Sized + Clone + Send + Sync + 'static,
+    O: Send + 'static
+    //Fut: Future<Output = O> + Send,
+{
+    type Output = O;
+
+    fn call(&self, i: I) -> Self::Output {
+        (self)(i)
+    }
+}
+
+
+pub type handler<I=HttpRequest, O = HttpResponse>= Box<dyn Handler<I, Output=O>>;
+//pub type handler = Box<dyn FnOnce(HttpRequest) -> HttpResponse + Send  + 'static>;
+
+impl Clone for handler {
+    fn clone(&self) -> Self {
+        dyn_clone::clone_box(&**self)
+    }
+
+}
+
+impl Display for handler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"let me see")
+    }
+}
+
+impl Debug for handler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"let me see")
+    }
+}
 
 
 pub type handlers = Vec<handler>;
+
